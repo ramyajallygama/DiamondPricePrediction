@@ -1,3 +1,5 @@
 Pandas
 numpy
 Flask
+scikit-learn
+logger
