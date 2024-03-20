@@ -12,7 +12,8 @@ import pandas as pd
 from src.exception import CustomException
 import sys,os
 from src.utils import save_object
-from dataclasses_1 import dataclass
+from dataclasses import dataclass
+from src.logger import logging
 
 @dataclass
 class DataTransformationConfig:
@@ -26,11 +27,11 @@ class DataTransformation:
         try:
            #Divide Categorical and Numerical columns
             categorical_cols=['cut','color','clarity']
-            numerical_cols=['carats','depth','table','x','y','z']
+            numerical_cols=['carat','depth','table','x','y','z']
 
             #Define custom ranking for ordinal varaibles cut,color,clarity
             cut_rank=['Fair','Good','Very Good','Premium','Ideal']
-            color_rank=['D','E','F','G','H','I']
+            color_rank=['D','E','F','G','H','I','J']
             clarity_rank=['I1','SI2','SI1','VS2','VS1','VVS2','VVS1','IF']
 
             #Categorical pipeline creation
@@ -59,27 +60,29 @@ class DataTransformation:
         except Exception as e:
             raise CustomException(e,sys)
         
-    def initiate_data_transformation(self,train_data_path,test_data_path):
+    def initiate_data_transformation(self,train_path,test_path):
             try:
-                train_df=pd.read_csv(train_data_path)
-                test_df=pd.read_csv(test_data_path)
+                train_df=pd.read_csv(train_path)
+                test_df=pd.read_csv(test_path)
+
+                
 
                 preprocessing_obj=self.get_data_transformation_obj()
-                target_col=['price']
-                drop_col=['target_col','id']
+            
+                target_column_name = 'price'
+                drop_columns = [target_column_name]
                 
-                 #  Train data
-                
-                input_feature_train_df=train_df.drop(columns=drop_col,axis=1)
-                target_feature_train_df=train_df[target_col]
+                 # Train data
+                input_feature_train_df=train_df.drop(columns=drop_columns,axis=1)
+                target_feature_train_df=train_df[target_column_name]
 
                 #Test Data
-                input_feature_test_df=test_df.drop(columns=drop_col,axis=1)
-                target_feature_test_df=test_df[target_col]
+                input_feature_test_df=test_df.drop(columns=drop_columns,axis=1)
+                target_feature_test_df=test_df[target_column_name]
 
                 #Data Transformation
-                input_feature_train_arr=preprocessing_obj.fit_transform(input_feature_test_df)
-                input_feature_test_arr=preprocessing_obj.transform(target_feature_test_df)
+                input_feature_train_arr=preprocessing_obj.fit_transform(input_feature_train_df)
+                input_feature_test_arr=preprocessing_obj.transform(input_feature_test_df)
 
                 train_arr=np.c_[input_feature_train_arr,np.array(target_feature_train_df)]
                 test_arr=np.c_[input_feature_test_arr,np.array(target_feature_test_df)]
@@ -90,12 +93,8 @@ class DataTransformation:
                 return(
                      train_arr,
                      test_arr,
-                     self.data_transformation_config.preprocessor_obj_file_path
-                     
+                     self.data_transformation_config.preprocessor_obj_file_path                     
                 )
-
-
-
                 
             except Exception as e:
                  raise CustomException(e,sys)
